@@ -121,5 +121,8 @@ usage: ./profanity2 [OPTIONS]
 |GTX 1070 OC|1950|4450|NO|179.0 MH/s| ~24s
 |GTX 1070|1750|4000|NO|163.0 MH/s| ~26s
 |RX 480|1328|2000|YES|120.0 MH/s| ~36s
+|RTX 4090|-|-|-|1096 MH/s| ~3s
 |Apple Silicon M1<br/>(8-core GPU)|-|-|-|45.0 MH/s| ~97s
 |Apple Silicon M1 Max<br/>(32-core GPU)|-|-|-|172.0 MH/s| ~25s
+|Apple Silicon M3 Pro<br/>(18-core GPU)|-|-|-|97 MH/s| ~45s
+
