@@ -791,7 +791,7 @@ __kernel void profanity_score_zerobytes(__global mp_number * const pInverse, __g
 
 	for (int i = 0; i < 20; ++i) {
 		if (hash[i] == 0) {
-      score++;
+			score++;
 		}
 	}
 
