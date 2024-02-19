@@ -192,7 +192,7 @@ int main(int argc, char * * argv) {
 		argp.addSwitch('I', "inverse-multiple", inverseMultiple);
 		argp.addSwitch('c', "contract", bMineContract);
 		argp.addSwitch('z', "publicKey", strPublicKey);
-		argp.addSwitch('Z', "zero-bytes", bModeZeroBytes);
+		argp.addSwitch('b', "zero-bytes", bModeZeroBytes);
 
 		if (!argp.parse()) {
 			std::cout << "error: bad arguments, try again :<" << std::endl;
