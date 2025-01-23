@@ -1,6 +1,8 @@
-name: Build Cargo Project
+name: Build project
 
 on:
+  push:
+    branches: [ "main", "actions/build" ]
   workflow_dispatch:
     inputs:
       build_type:
