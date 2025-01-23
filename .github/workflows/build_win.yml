@@ -23,7 +23,7 @@ jobs:
 
       - name: Install opencl dev
         run: |
-          choco install -y ocl-icd-opencl-dev mesa-opencl-icd
+          vcpkg install opencl
 
       - name: Build project
         run: |
