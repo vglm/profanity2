@@ -1,0 +1,30 @@
+name: Build project
+
+on:
+  push:
+    branches: [ "main", "actions/build" ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Type of build (debug or release)'
+        required: true
+        default: 'release'
+      target:
+        description: 'Optional compilation target'
+        required: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build project
+        run: |
+          make
+
+      - name: Run search tests
+        run: |
+          ./profanity2.x64 --leading 0
