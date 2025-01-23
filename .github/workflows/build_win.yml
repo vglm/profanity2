@@ -21,10 +21,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install opencl dev
+        run: |
+          choco install -y ocl-icd-opencl-dev mesa-opencl-icd
+
       - name: Build project
         run: |
-          git clone https://github.com/KhronosGroup/OpenCL-SDK.git
-          
           make
 
       - name: Run search tests
