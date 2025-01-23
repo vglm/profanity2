@@ -1,0 +1,30 @@
+name: Build Cargo Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Type of build (debug or release)'
+        required: true
+        default: 'release'
+      target:
+        description: 'Optional compilation target'
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install opencl dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ocl-icd-opencl-dev
+
+      - name: Build project
+        run: |
+          make
+
