@@ -13,7 +13,13 @@
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <machine/endian.h>
 #else
-#include <winsock.h>
+uint32_t htonl(uint32_t hostlong) {
+    uint32_t result = ((hostlong & 0xFF000000) >> 24) |
+                      ((hostlong & 0x00FF0000) >> 8)  |
+                      ((hostlong & 0x0000FF00) << 8)  |
+                      ((hostlong & 0x000000FF) << 24);
+    return result;
+}
 #endif
 
 #include "precomp.hpp"
