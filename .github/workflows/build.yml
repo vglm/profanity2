@@ -24,12 +24,12 @@ jobs:
       - name: Install opencl dev
         run: |
           sudo apt-get update
-          sudo apt-get install -y ocl-icd-opencl-dev clinfo mesa-opencl-icd
+          sudo apt-get install -y ocl-icd-opencl-dev mesa-opencl-icd
 
       - name: Build project
         run: |
           make
 
-      - name: Run opencl info
+      - name: Run search tests
         run: |
-          clinfo
+          ./profanity2.x64 --leading 0
