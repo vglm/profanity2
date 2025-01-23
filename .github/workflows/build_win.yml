@@ -21,10 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install opencl dev
-        run: |
-          vcpkg install opencl
-
       - name: Build project
         run: |
           make
