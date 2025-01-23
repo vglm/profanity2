@@ -23,6 +23,8 @@ jobs:
 
       - name: Build project
         run: |
+          git clone https://github.com/KhronosGroup/OpenCL-SDK.git
+          
           make
 
       - name: Run search tests
