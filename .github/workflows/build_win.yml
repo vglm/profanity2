@@ -21,6 +21,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
       - name: Build project
         run: |
           MSBuild /p:Platform=x86 /p:Configuration=Release
