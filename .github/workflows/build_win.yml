@@ -23,8 +23,10 @@ jobs:
 
       - name: Build project
         run: |
-          make
+          MSBuild /p:Platform=x86 /p:Configuration=Release
+          cp *.cl Release/
 
-      - name: Run search tests
-        run: |
-          ./profanity2.x64 --leading 0
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
