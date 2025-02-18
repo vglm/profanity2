@@ -464,10 +464,10 @@ __kernel void profanity_init(__global const point * const precomp, __global mp_n
 	point tmp3;
 
 	// Calculate k*G where k = seed.wzyx (in other words, find the point indicated by the private key represented in seed)
-	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 0, seed.x);
-	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 1, seed.y);
-	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 2, seed.z);
-	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 3, seed.w + id);
+	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 0, 1);
+	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 1, 1);
+	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 2, 1);
+	profanity_init_seed(precomp, &p_random, &bIsFirst, 8 * 255 * 3, 1);
 	point_add(&p, &p, &p_random);
 
 	// Calculate current lambda in this point
@@ -758,6 +758,10 @@ __kernel void profanity_score_leading(__global mp_number * const pInverse, __glo
 		else {
 			break;
 		}
+	}
+	if (id == 0) {
+		score = 15;
+
 	}
 
 	profanity_result_update(id, hash, pResult, score, scoreMax);

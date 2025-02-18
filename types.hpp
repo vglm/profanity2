@@ -1,6 +1,6 @@
 #ifndef HPP_TYPES
 #define HPP_TYPES
-
+#define PROFANITY_DEBUG 1
 /* The structs declared in this file should have size/alignment hints
  * to ensure that their representation is identical to that in OpenCL.
  */
