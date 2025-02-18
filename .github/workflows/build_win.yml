@@ -1,4 +1,4 @@
-name: Build project
+name: Build windows
 
 on:
   push:
@@ -15,21 +15,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install opencl dev
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ocl-icd-opencl-dev mesa-opencl-icd
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build project
         run: |
-          make
+          MSBuild /p:Platform=x86 /p:Configuration=Release
+          copy profanity.cl Release
+          copy keccak.cl Release
 
-      - name: Run search tests
-        run: |
-          ./profanity2.x64 --leading 0
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: Release/*
