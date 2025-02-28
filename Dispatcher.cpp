@@ -13,7 +13,13 @@
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <machine/endian.h>
 #else
-#include <arpa/inet.h>
+uint32_t htonl(uint32_t hostlong) {
+    uint32_t result = ((hostlong & 0xFF000000) >> 24) |
+                      ((hostlong & 0x00FF0000) >> 8)  |
+                      ((hostlong & 0x0000FF00) << 8)  |
+                      ((hostlong & 0x000000FF) << 24);
+    return result;
+}
 #endif
 
 #include "precomp.hpp"
@@ -194,7 +200,8 @@ Dispatcher::Device::Device(Dispatcher & parent, cl_context & clContext, cl_progr
 	m_sizeInitialized(0),
 	m_eventFinished(NULL)
 {
-
+	printf("SeedX: %llu %llu %llu %llu\n", m_clSeedX.s0, m_clSeedX.s1, m_clSeedX.s2, m_clSeedX.s3);
+	printf("SeedY: %llu %llu %llu %llu\n", m_clSeedY.s0, m_clSeedY.s1, m_clSeedY.s2, m_clSeedY.s3);
 }
 
 Dispatcher::Device::~Device() {
@@ -215,6 +222,8 @@ Dispatcher::Dispatcher(cl_context & clContext, cl_program & clProgram, const Mod
 	, m_publicKeyX(fromHex(seedPublicKey.substr(0, 64)))
 	, m_publicKeyY(fromHex(seedPublicKey.substr(64, 64)))
 {
+	//printf("PublicKeyX: %llu %llu %llu %llu\n", m_publicKeyX.s0, m_publicKeyX.s1, m_publicKeyX.s2, m_publicKeyX.s3);
+	//printf("PublicKeyy: %llu %llu %llu %llu\n", m_publicKeyY.s0, m_publicKeyY.s1, m_publicKeyY.s2, m_publicKeyY.s3);
 }
 
 Dispatcher::~Dispatcher() {
@@ -408,6 +417,7 @@ void Dispatcher::dispatch(Device & d) {
 	cl_event eventIterate;
 
 	enqueueKernelDevice(d, d.m_kernelInverse, m_size / m_inverseSize, &eventInverse);
+	
 	enqueueKernelDevice(d, d.m_kernelIterate, m_size, &eventIterate);
 #else
 	enqueueKernelDevice(d, d.m_kernelInverse, m_size / m_inverseSize);
@@ -418,6 +428,7 @@ void Dispatcher::dispatch(Device & d) {
 		enqueueKernelDevice(d, d.m_kernelTransform, m_size);
 	}
 
+
 	enqueueKernelDevice(d, d.m_kernelScore, m_size);
 	clFlush(d.m_clQueue);
 
@@ -426,6 +437,9 @@ void Dispatcher::dispatch(Device & d) {
 	// However, this happens to work on my computer and it's not really intended for release, just something to aid me in
 	// optimizations.
 	clFinish(d.m_clQueue); 
+
+
+
 	std::cout << "Timing: profanity_inverse = " << getKernelExecutionTimeMicros(eventInverse) << "us, profanity_iterate = " << getKernelExecutionTimeMicros(eventIterate) << "us" << std::endl;
 #endif
 
@@ -434,6 +448,7 @@ void Dispatcher::dispatch(Device & d) {
 }
 
 void Dispatcher::handleResult(Device & d) {
+
 	for (auto i = PROFANITY_MAX_SCORE; i > m_clScoreMax; --i) {
 		result & r = d.m_memResult[i];
 
@@ -445,7 +460,7 @@ void Dispatcher::handleResult(Device & d) {
 			if (i >= m_clScoreMax) {
 				m_clScoreMax = i;
 
-				if (m_clScoreQuit && i >= m_clScoreQuit) {
+				if (i >= 4) {
 					m_quit = true;
 				}
 
