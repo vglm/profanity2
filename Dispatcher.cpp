@@ -87,20 +87,10 @@ static void printResult(cl_ulong4 seed, cl_ulong round, result r, cl_uchar score
 	cl_ulong carry = 0;
 	cl_ulong4 seedRes;
 
-    std::cout << "Round: " << round << std::endl;
-    std::cout << "FoundId: " << r.foundId << std::endl;
-    std::cout << seed.s[0] << std::endl;
-    std::cout << seed.s[1] << std::endl;
-    std::cout << seed.s[2] << std::endl;
-    std::cout << seed.s[3] << std::endl;
 	seedRes.s[0] = seed.s[0] + round; carry = seedRes.s[0] < round;
 	seedRes.s[1] = seed.s[1] + carry; carry = !seedRes.s[1];
 	seedRes.s[2] = seed.s[2] + carry; carry = !seedRes.s[2];
 	seedRes.s[3] = seed.s[3] + carry + r.foundId;
-    std::cout << seedRes.s[0] << std::endl;
-    std::cout << seedRes.s[1] << std::endl;
-    std::cout << seedRes.s[2] << std::endl;
-    std::cout << seedRes.s[3] << std::endl;
 
 	std::ostringstream ss;
 	ss << std::hex << std::setfill('0');
@@ -175,10 +165,10 @@ cl_ulong4 Dispatcher::Device::createSeed() {
 	std::random_device rd;
 
 	cl_ulong4 diff;
-	diff.s[0] = 0x0;
-	diff.s[1] = 0x0;
-	diff.s[2] = 0x0;
-	diff.s[3] = 0x0; // zeroing 2 highest bytes to prevent overflowing sum private key after adding to seed private key
+	diff.s[0] = (((uint64_t)rd()) << 32) | rd();
+	diff.s[1] = (((uint64_t)rd()) << 32) | rd();
+	diff.s[2] = (((uint64_t)rd()) << 32) | rd();
+	diff.s[3] = (((uint64_t)rd() & 0x0000ffff) << 32) | rd(); // zeroing 2 highest bytes to prevent overflowing sum private key after adding to seed private key
 	return diff;
 #endif
 }
@@ -196,9 +186,9 @@ Dispatcher::Device::Device(Dispatcher & parent, cl_context & clContext, cl_progr
 	m_kernelTransform( mode.transformKernel() == "" ? NULL : createKernel(clProgram, mode.transformKernel())),
 	m_kernelScore(createKernel(clProgram, mode.kernel)),
 	m_memPrecomp(clContext, m_clQueue, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, sizeof(g_precomp), g_precomp),
-	m_memPointsDeltaX(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, size, true),
-	m_memInversedNegativeDoubleGy(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, size, true),
-	m_memPrevLambda(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, size, true),
+	m_memPointsDeltaX(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, size, true),
+	m_memInversedNegativeDoubleGy(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, size, true),
+	m_memPrevLambda(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_NO_ACCESS, size, true),
 	m_memResult(clContext, m_clQueue, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, PROFANITY_MAX_SCORE + 1),
 	m_memData1(clContext, m_clQueue, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, 20),
 	m_memData2(clContext, m_clQueue, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, 20),
@@ -210,7 +200,8 @@ Dispatcher::Device::Device(Dispatcher & parent, cl_context & clContext, cl_progr
 	m_sizeInitialized(0),
 	m_eventFinished(NULL)
 {
-
+	printf("SeedX: %llu %llu %llu %llu\n", m_clSeedX.s0, m_clSeedX.s1, m_clSeedX.s2, m_clSeedX.s3);
+	printf("SeedY: %llu %llu %llu %llu\n", m_clSeedY.s0, m_clSeedY.s1, m_clSeedY.s2, m_clSeedY.s3);
 }
 
 Dispatcher::Device::~Device() {
@@ -231,6 +222,8 @@ Dispatcher::Dispatcher(cl_context & clContext, cl_program & clProgram, const Mod
 	, m_publicKeyX(fromHex(seedPublicKey.substr(0, 64)))
 	, m_publicKeyY(fromHex(seedPublicKey.substr(64, 64)))
 {
+	//printf("PublicKeyX: %llu %llu %llu %llu\n", m_publicKeyX.s0, m_publicKeyX.s1, m_publicKeyX.s2, m_publicKeyX.s3);
+	//printf("PublicKeyy: %llu %llu %llu %llu\n", m_publicKeyY.s0, m_publicKeyY.s1, m_publicKeyY.s2, m_publicKeyY.s3);
 }
 
 Dispatcher::~Dispatcher() {
@@ -315,20 +308,6 @@ void Dispatcher::initBegin(Device & d) {
 	d.m_memData2.write(true);
 
 	// Kernel arguments - profanity_begin
-	printf("Setting kernel arguments\n");
-	printf("Cl seed: %lu\n", d.m_clSeed.s[0]);
-	printf("Cl seed: %lu\n", d.m_clSeed.s[1]);
-    printf("Cl seed: %lu\n", d.m_clSeed.s[2]);
-    printf("Cl seed: %lu\n", d.m_clSeed.s[3]);
-	printf("Cl seed X: %lu\n", d.m_clSeedX.s[0]);
-	printf("Cl seed X: %lu\n", d.m_clSeedX.s[1]);
-    printf("Cl seed X: %lu\n", d.m_clSeedX.s[2]);
-    printf("Cl seed X: %lu\n", d.m_clSeedX.s[3]);
-	printf("Cl seed Y: %lu\n", d.m_clSeedY.s[0]);
-    printf("Cl seed Y: %lu\n", d.m_clSeedY.s[1]);
-    printf("Cl seed Y: %lu\n", d.m_clSeedY.s[2]);
-    printf("Cl seed Y: %lu\n", d.m_clSeedY.s[3]);
-
 	d.m_memPrecomp.setKernelArg(d.m_kernelInit, 0);
 	d.m_memPointsDeltaX.setKernelArg(d.m_kernelInit, 1);
 	d.m_memPrevLambda.setKernelArg(d.m_kernelInit, 2);
@@ -428,13 +407,7 @@ void Dispatcher::enqueueKernelDevice(Device & d, cl_kernel & clKernel, size_t wo
 		}
 	}
 }
-void pretty_print_mp_number(const mp_number& n) {
-	printf("mp_number: ");
-	for (int i = 0; i < 8; ++i) {
-		printf("0x%08x ", n.d[i]);
-	}
-	printf("\n");
-}
+
 void Dispatcher::dispatch(Device & d) {
 	cl_event event;
 	d.m_memResult.read(false, &event);
@@ -467,7 +440,6 @@ void Dispatcher::dispatch(Device & d) {
 
 
 
-
 	std::cout << "Timing: profanity_inverse = " << getKernelExecutionTimeMicros(eventInverse) << "us, profanity_iterate = " << getKernelExecutionTimeMicros(eventIterate) << "us" << std::endl;
 #endif
 
@@ -480,7 +452,7 @@ void Dispatcher::handleResult(Device & d) {
 	for (auto i = PROFANITY_MAX_SCORE; i > m_clScoreMax; --i) {
 		result & r = d.m_memResult[i];
 
-		if (r.found > 0) {
+		if (r.found > 0 && i >= d.m_clScoreMax) {
 			d.m_clScoreMax = i;
 			CLMemory<cl_uchar>::setKernelArg(d.m_kernelScore, 4, d.m_clScoreMax);
 
@@ -488,7 +460,7 @@ void Dispatcher::handleResult(Device & d) {
 			if (i >= m_clScoreMax) {
 				m_clScoreMax = i;
 
-				if (m_clScoreQuit && i >= m_clScoreQuit) {
+				if (i >= 4) {
 					m_quit = true;
 				}
 
